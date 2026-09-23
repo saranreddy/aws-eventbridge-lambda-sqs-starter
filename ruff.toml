@@ -1,0 +1,6 @@
+[lint]
+select = ["E", "F", "W", "I", "UP", "RUF"]
+ignore = []
+
+[lint.per-file-ignores]
+"scripts/*.py" = ["BLE001"]  # Allow catching Exception in top-level CLI scripts

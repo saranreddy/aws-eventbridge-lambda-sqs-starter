@@ -5,14 +5,13 @@ Processes events from EventBridge, with failure handling to SQS.
 
 import json
 import logging
-import os
-from typing import Any, Dict
+from typing import Any
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
-def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     """
     Process EventBridge events.
 
@@ -67,5 +66,5 @@ def lambda_handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         }
 
     except Exception as e:
-        logger.error(f"Failed to process event {request_id}: {str(e)}")
+        logger.error(f"Failed to process event {request_id}: {e!s}")
         raise

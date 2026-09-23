@@ -6,7 +6,6 @@ Put a custom event to EventBridge.
 import argparse
 import json
 import sys
-from typing import Optional
 
 import boto3
 from botocore.exceptions import ClientError
@@ -17,7 +16,7 @@ def put_event(
     export_type: str,
     user_id: str,
     force_failure: bool,
-    region: Optional[str] = None,
+    region: str | None = None,
 ) -> dict:
     """
     Put an export request event to EventBridge.
@@ -99,7 +98,7 @@ def main() -> int:
             region=args.region,
         )
 
-        print(f"\n✓ Event sent successfully!")
+        print("\n✓ Event sent successfully!")
         print(f"  Event ID: {response['Entries'][0]['EventId']}")
 
         if args.force_failure:

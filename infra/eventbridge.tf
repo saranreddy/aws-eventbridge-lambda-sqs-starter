@@ -25,15 +25,6 @@ resource "aws_cloudwatch_event_target" "lambda" {
   rule           = aws_cloudwatch_event_rule.export_requested.name
   event_bus_name = aws_cloudwatch_event_bus.demo.name
   arn            = aws_lambda_function.event_processor.arn
-
-  retry_policy {
-    maximum_event_age       = 3600
-    maximum_retry_attempts  = 2
-  }
-
-  dead_letter_config {
-    arn = aws_sqs_queue.failed_events.arn
-  }
 }
 
 resource "aws_lambda_permission" "allow_eventbridge" {

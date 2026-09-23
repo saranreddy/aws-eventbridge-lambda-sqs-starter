@@ -1,6 +1,6 @@
 resource "aws_sqs_queue" "failed_events_dlq" {
-  name                      = "${var.project_name}-failed-events-dlq"
-  message_retention_seconds = var.sqs_message_retention
+  name                       = "${var.project_name}-failed-events-dlq"
+  message_retention_seconds  = var.sqs_message_retention
   visibility_timeout_seconds = var.sqs_visibility_timeout
 
   tags = {

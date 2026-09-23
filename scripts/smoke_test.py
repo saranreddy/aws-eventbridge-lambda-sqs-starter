@@ -8,7 +8,6 @@ import argparse
 import json
 import sys
 import time
-from typing import Optional
 
 import boto3
 from botocore.exceptions import ClientError
@@ -19,7 +18,7 @@ def wait_for_log_events(
     lambda_name: str,
     search_term: str,
     timeout: int = 60,
-    region: Optional[str] = None,
+    region: str | None = None,
 ) -> bool:
     """
     Wait for a specific log event to appear in CloudWatch Logs.
@@ -64,7 +63,7 @@ def wait_for_log_events(
     return False
 
 
-def check_dlq_empty(queue_url: str, region: Optional[str] = None) -> bool:
+def check_dlq_empty(queue_url: str, region: str | None = None) -> bool:
     """
     Check that the DLQ is empty (no unexpected failures).
 
@@ -91,7 +90,7 @@ def run_smoke_test(
     lambda_name: str,
     log_group: str,
     dlq_url: str,
-    region: Optional[str] = None,
+    region: str | None = None,
 ) -> bool:
     """
     Run smoke test: send event, verify Lambda execution, check no DLQ buildup.
@@ -132,7 +131,7 @@ def run_smoke_test(
     event_id = response["Entries"][0]["EventId"]
     print(f"✓ Event sent (ID: {event_id})")
 
-    print(f"\n2. Verifying Lambda execution...")
+    print("\n2. Verifying Lambda execution...")
     found = wait_for_log_events(
         log_group=log_group,
         lambda_name=lambda_name,
@@ -146,16 +145,16 @@ def run_smoke_test(
         print("  Check CloudWatch Logs manually")
         return False
 
-    print(f"✓ Lambda processed event successfully")
+    print("✓ Lambda processed event successfully")
 
-    print(f"\n3. Checking DLQ for unexpected failures...")
+    print("\n3. Checking DLQ for unexpected failures...")
     dlq_empty = check_dlq_empty(dlq_url, region=region)
 
     if not dlq_empty:
-        print(f"⚠ DLQ is not empty - there may be failures")
+        print("⚠ DLQ is not empty - there may be failures")
         print(f"  Run: python scripts/peek_queue.py --queue-url {dlq_url}")
     else:
-        print(f"✓ DLQ is empty (no unexpected failures)")
+        print("✓ DLQ is empty (no unexpected failures)")
 
     print("\n" + "=" * 60)
 

@@ -7,10 +7,9 @@ import argparse
 import shutil
 import subprocess
 import sys
-from typing import List, Tuple
 
 
-def check_command(cmd: str, version_flag: str = "--version") -> Tuple[bool, str]:
+def check_command(cmd: str, version_flag: str = "--version") -> tuple[bool, str]:
     """Check if a command is available and get its version."""
     if not shutil.which(cmd):
         return False, f"{cmd} not found"
@@ -21,6 +20,7 @@ def check_command(cmd: str, version_flag: str = "--version") -> Tuple[bool, str]
             capture_output=True,
             text=True,
             timeout=5,
+            check=False,
         )
         version = result.stdout.strip() or result.stderr.strip()
         return True, version.split("\n")[0]
@@ -28,7 +28,7 @@ def check_command(cmd: str, version_flag: str = "--version") -> Tuple[bool, str]
         return False, str(e)
 
 
-def check_aws_credentials() -> Tuple[bool, str]:
+def check_aws_credentials() -> tuple[bool, str]:
     """Check if AWS credentials are configured."""
     try:
         import boto3
@@ -49,7 +49,7 @@ def check_aws_credentials() -> Tuple[bool, str]:
         return False, str(e)
 
 
-def check_python_packages() -> Tuple[bool, str]:
+def check_python_packages() -> tuple[bool, str]:
     """Check if required Python packages are installed."""
     try:
         import boto3
@@ -71,7 +71,7 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    checks: List[Tuple[str, Tuple[bool, str]]] = [
+    checks: list[tuple[str, tuple[bool, str]]] = [
         ("Terraform", check_command("terraform", "version")),
         ("AWS CLI", check_command("aws", "--version")),
         ("Python", check_command("python3", "--version")),

@@ -6,7 +6,6 @@ Peek at messages in the SQS failure queue without deleting them.
 import argparse
 import json
 import sys
-from typing import Optional
 
 import boto3
 from botocore.exceptions import ClientError
@@ -15,7 +14,7 @@ from botocore.exceptions import ClientError
 def peek_queue(
     queue_url: str,
     max_messages: int = 10,
-    region: Optional[str] = None,
+    region: str | None = None,
     delete: bool = False,
 ) -> None:
     """
@@ -57,7 +56,7 @@ def peek_queue(
 
         try:
             body = json.loads(msg["Body"])
-            print(f"  Body:")
+            print("  Body:")
             print(json.dumps(body, indent=4))
         except json.JSONDecodeError:
             print(f"  Body (raw): {msg['Body']}")
@@ -67,7 +66,7 @@ def peek_queue(
                 QueueUrl=queue_url,
                 ReceiptHandle=msg["ReceiptHandle"],
             )
-            print(f"  ✓ Deleted")
+            print("  ✓ Deleted")
 
         print()
 
