@@ -1,0 +1,2 @@
+# Lambda runtime includes boto3, so no additional dependencies needed
+# Add any additional Python packages here if required

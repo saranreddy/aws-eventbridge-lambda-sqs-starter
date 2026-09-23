@@ -1,0 +1,14 @@
+# Copy this file to terraform.tfvars and customize as needed
+
+aws_region    = "us-east-1"
+environment   = "dev"
+project_name  = "eventbridge-lambda-sqs-demo"
+
+# Lambda configuration
+lambda_timeout     = 30
+lambda_memory_size = 256
+
+# SQS configuration
+sqs_visibility_timeout = 60
+sqs_message_retention  = 345600
+sqs_max_receive_count  = 3
