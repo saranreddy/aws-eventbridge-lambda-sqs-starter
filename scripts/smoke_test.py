@@ -34,7 +34,12 @@ def wait_for_log_events(
         True if found, False if timeout
     """
     logs_client = boto3.client("logs", region_name=region)
+    cloudwatch_client = boto3.client("cloudwatch", region_name=region)
     start_time = time.time()
+
+    # Quote the search term for CloudWatch filter pattern
+    # This is critical for terms containing hyphens or special characters
+    filter_pattern = f'"{search_term}"'
 
     print(f"Waiting for Lambda execution (timeout: {timeout}s)...", end="", flush=True)
 
@@ -43,7 +48,7 @@ def wait_for_log_events(
             response = logs_client.filter_log_events(
                 logGroupName=log_group,
                 startTime=int((time.time() - 120) * 1000),
-                filterPattern=search_term,
+                filterPattern=filter_pattern,
             )
 
             if response.get("events"):
@@ -60,6 +65,74 @@ def wait_for_log_events(
         time.sleep(2)
 
     print(" timeout!")
+
+    # Provide diagnostic information on timeout
+    print("\n  Diagnostic information:")
+    try:
+        # Check if any log streams exist
+        streams_response = logs_client.describe_log_streams(
+            logGroupName=log_group,
+            orderBy="LastEventTime",
+            descending=True,
+            limit=5,
+        )
+        stream_count = len(streams_response.get("logStreams", []))
+        print(f"    - Log streams in group: {stream_count}")
+
+        if stream_count > 0:
+            latest_stream = streams_response["logStreams"][0]
+            last_event_time = latest_stream.get("lastEventTime", 0)
+            if last_event_time:
+                time_ago = int(time.time() * 1000 - last_event_time) // 1000
+                print(f"    - Most recent log event: {time_ago}s ago")
+    except ClientError:
+        print("    - Could not retrieve log stream info")
+
+    # Check Lambda invocation metrics
+    try:
+        end_time = int(time.time())
+        start_metric_time = end_time - 300  # Last 5 minutes
+
+        invocations_response = cloudwatch_client.get_metric_statistics(
+            Namespace="AWS/Lambda",
+            MetricName="Invocations",
+            Dimensions=[{"Name": "FunctionName", "Value": lambda_name}],
+            StartTime=start_metric_time,
+            EndTime=end_time,
+            Period=60,
+            Statistics=["Sum"],
+        )
+
+        errors_response = cloudwatch_client.get_metric_statistics(
+            Namespace="AWS/Lambda",
+            MetricName="Errors",
+            Dimensions=[{"Name": "FunctionName", "Value": lambda_name}],
+            StartTime=start_metric_time,
+            EndTime=end_time,
+            Period=60,
+            Statistics=["Sum"],
+        )
+
+        total_invocations = sum(
+            point["Sum"] for point in invocations_response.get("Datapoints", [])
+        )
+        total_errors = sum(
+            point["Sum"] for point in errors_response.get("Datapoints", [])
+        )
+
+        print(f"    - Lambda invocations (last 5m): {int(total_invocations)}")
+        print(f"    - Lambda errors (last 5m): {int(total_errors)}")
+
+        if total_invocations == 0:
+            print(
+                "    ⚠ No Lambda invocations detected - check EventBridge rule/pattern"
+            )
+    except ClientError:
+        print("    - Could not retrieve Lambda metrics")
+
+    print(f"    - Suggestion: Check CloudWatch Logs manually at {log_group}")
+    print("    - Verify EventBridge rule matches event source/detail-type")
+
     return False
 
 
