@@ -53,3 +53,6 @@ jobs:
 
       - name: Type check with mypy
         run: mypy --install-types --non-interactive scripts/ src/ || true
+
+      - name: Run pytest
+        run: pytest tests/ -v

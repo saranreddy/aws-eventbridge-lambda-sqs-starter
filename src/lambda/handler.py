@@ -25,7 +25,7 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     Raises:
         ValueError: If event processing should fail (triggers SQS delivery)
     """
-    request_id = context.request_id
+    request_id = context.aws_request_id
     logger.info(f"Processing event {request_id}")
     logger.info(f"Event: {json.dumps(event)}")
 

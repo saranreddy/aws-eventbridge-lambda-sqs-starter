@@ -151,6 +151,17 @@ make lint       # Lint Terraform and Python (CI checks)
 make clean      # Clean temporary files
 ```
 
+**Note for macOS users**: If your Xcode license is not accepted, `make` commands may fail. You can run the smoke test directly without `make`:
+
+```bash
+cd infra
+python3 ../scripts/smoke_test.py \
+  --bus-name "$(terraform output -raw event_bus_name)" \
+  --lambda-name "$(terraform output -raw lambda_function_name)" \
+  --log-group "$(terraform output -raw lambda_log_group)" \
+  --dlq-url "$(terraform output -raw sqs_dlq_url)"
+```
+
 ## Cost
 
 This starter is designed to stay within AWS Free Tier limits or cost pennies for a short demo:
