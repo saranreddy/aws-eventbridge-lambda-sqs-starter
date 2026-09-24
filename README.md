@@ -22,7 +22,7 @@ This starter is for backend and platform engineers building async, event-driven 
 - High-throughput ordered streaming or replay-heavy workloads (use Kafka/Kinesis; see [aws-msk-kafka-starter](https://github.com/saranreddy/aws-msk-kafka-starter))
 - Long-running jobs past Lambda's 15-minute limit (use Step Functions or ECS tasks)
 - Strict exactly-once delivery guarantees (EventBridge + Lambda offers at-least-once)
-- A simple scheduled cron job (use EventScheduler or a standalone Lambda with a cron trigger)
+- A simple scheduled cron job (use EventBridge Scheduler to invoke a Lambda on a schedule)
 
 **Cost note**: This demo costs pennies for a short test (< $0.01 for 1000 events). Always run `terraform destroy` when done.
 
