@@ -8,6 +8,24 @@
 
 A small, honest demo of an async work pattern for platform and AWS engineers: EventBridge routes custom events to a Lambda that processes them. On failure, the payload lands on an SQS queue (with DLQ) so work is not lost and can be inspected or retried.
 
+## Who Should Use This
+
+This starter is for backend and platform engineers building async, event-driven processing on AWS — especially teams moving side effects (emails, webhooks, enrichment) out of request paths and into background work. Common in SaaS backends, e-commerce order flows, and internal platform event buses.
+
+**Good fit when you need:**
+- Order-placed or user-action events triggering downstream work (notifications, analytics, billing)
+- Webhook ingestion with automatic retries and a dead-letter queue for failed processing
+- Fan-out to multiple consumers by rule (one event, many subscribers)
+- Routing SaaS partner events or third-party integrations through a custom bus
+
+**Not a good fit when you need:**
+- High-throughput ordered streaming or replay-heavy workloads (use Kafka/Kinesis; see [aws-msk-kafka-starter](https://github.com/saranreddy/aws-msk-kafka-starter))
+- Long-running jobs past Lambda's 15-minute limit (use Step Functions or ECS tasks)
+- Strict exactly-once delivery guarantees (EventBridge + Lambda offers at-least-once)
+- A simple scheduled cron job (use EventBridge Scheduler to invoke a Lambda on a schedule)
+
+**Cost note**: This demo costs pennies for a short test (< $0.01 for 1000 events). Always run `terraform destroy` when done.
+
 ## Architecture
 
 ```mermaid
