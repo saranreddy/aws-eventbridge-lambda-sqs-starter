@@ -30,7 +30,12 @@ def lambda_handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     logger.info(f"Event: {json.dumps(event)}")
 
     try:
-        detail = event.get("detail", {})
+        detail_raw = event.get("detail", {})
+        if isinstance(detail_raw, str):
+            detail = json.loads(detail_raw)
+        else:
+            detail = detail_raw
+
         detail_type = event.get("detail-type", "Unknown")
         source = event.get("source", "Unknown")
 

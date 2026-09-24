@@ -16,6 +16,7 @@ def peek_queue(
     max_messages: int = 10,
     region: str | None = None,
     delete: bool = False,
+    wait_seconds: int = 5,
 ) -> None:
     """
     Peek at messages in an SQS queue.
@@ -25,13 +26,14 @@ def peek_queue(
         max_messages: Maximum number of messages to retrieve (1-10)
         region: AWS region (optional)
         delete: Whether to delete messages after reading
+        wait_seconds: Long polling wait time (0-20 seconds)
     """
     sqs_client = boto3.client("sqs", region_name=region)
 
     response = sqs_client.receive_message(
         QueueUrl=queue_url,
         MaxNumberOfMessages=min(max_messages, 10),
-        WaitTimeSeconds=5,
+        WaitTimeSeconds=min(max(wait_seconds, 0), 20),
         AttributeNames=["All"],
         MessageAttributeNames=["All"],
     )
@@ -95,6 +97,12 @@ def main() -> int:
         "--region",
         help="AWS region (uses default if not specified)",
     )
+    parser.add_argument(
+        "--wait-seconds",
+        type=int,
+        default=5,
+        help="Long polling wait time in seconds (0-20, default: 5)",
+    )
     args = parser.parse_args()
 
     try:
@@ -111,6 +119,7 @@ def main() -> int:
             max_messages=args.max_messages,
             region=args.region,
             delete=args.delete,
+            wait_seconds=args.wait_seconds,
         )
         return 0
 

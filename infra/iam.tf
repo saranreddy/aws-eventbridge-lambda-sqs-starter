@@ -30,7 +30,7 @@ data "aws_iam_policy_document" "lambda_permissions" {
       "logs:PutLogEvents"
     ]
     resources = [
-      "arn:aws:logs:${var.aws_region}:*:log-group:/aws/lambda/${var.project_name}-processor*"
+      "arn:aws:logs:${var.aws_region}:*:log-group:/aws/lambda/${var.project_name}-processor:*"
     ]
   }
 
