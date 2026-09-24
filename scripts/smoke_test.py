@@ -85,6 +85,23 @@ def wait_for_log_events(
             if last_event_time:
                 time_ago = int(time.time() * 1000 - last_event_time) // 1000
                 print(f"    - Most recent log event: {time_ago}s ago")
+
+            # Dump recent log events to help diagnose
+            print("\n    Recent log events (last 2 minutes):")
+            try:
+                recent_logs = logs_client.filter_log_events(
+                    logGroupName=log_group,
+                    startTime=int((time.time() - 120) * 1000),
+                    limit=50,
+                )
+                events = recent_logs.get("events", [])
+                if events:
+                    for log_event in events[:20]:
+                        print(f"      {log_event.get('message', '').rstrip()}")
+                else:
+                    print("      (no log events found)")
+            except ClientError as e:
+                print(f"      Could not retrieve log events: {e}")
     except ClientError:
         print("    - Could not retrieve log stream info")
 
@@ -127,6 +144,8 @@ def wait_for_log_events(
             print(
                 "    ⚠ No Lambda invocations detected - check EventBridge rule/pattern"
             )
+        elif total_errors > 0:
+            print("    ✗ Lambda errors detected - check logs above for error messages")
     except ClientError:
         print("    - Could not retrieve Lambda metrics")
 
@@ -218,9 +237,42 @@ def run_smoke_test(
         print("  Check CloudWatch Logs manually")
         return False
 
-    print("✓ Lambda processed event successfully")
+    print("✓ Lambda log entry found")
 
-    print("\n3. Checking DLQ for unexpected failures...")
+    # Check for errors in recent invocations
+    print("\n3. Checking for Lambda errors...")
+    cloudwatch_client = boto3.client("cloudwatch", region_name=region)
+    end_time = int(time.time())
+    start_metric_time = end_time - 120  # Last 2 minutes
+
+    try:
+        errors_response = cloudwatch_client.get_metric_statistics(
+            Namespace="AWS/Lambda",
+            MetricName="Errors",
+            Dimensions=[{"Name": "FunctionName", "Value": lambda_name}],
+            StartTime=start_metric_time,
+            EndTime=end_time,
+            Period=60,
+            Statistics=["Sum"],
+        )
+        total_errors = sum(
+            point["Sum"] for point in errors_response.get("Datapoints", [])
+        )
+
+        if total_errors > 0:
+            print(
+                f"✗ Lambda errors detected: {int(total_errors)} "
+                f"error(s) in last 2 minutes"
+            )
+            print("  Check CloudWatch Logs for error details")
+            return False
+        else:
+            print("✓ No Lambda errors detected")
+    except ClientError as e:
+        print(f"⚠ Could not check Lambda errors: {e}")
+        print("  Proceeding with caution...")
+
+    print("\n4. Checking DLQ for unexpected failures...")
     dlq_empty = check_dlq_empty(dlq_url, region=region)
 
     if not dlq_empty:
@@ -230,13 +282,8 @@ def run_smoke_test(
         print("✓ DLQ is empty (no unexpected failures)")
 
     print("\n" + "=" * 60)
-
-    if found and dlq_empty:
-        print("✓ Smoke test PASSED")
-        return True
-    else:
-        print("✗ Smoke test FAILED")
-        return False
+    print("✓ Smoke test PASSED")
+    return True
 
 
 def main() -> int:

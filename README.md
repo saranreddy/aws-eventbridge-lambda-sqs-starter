@@ -89,7 +89,9 @@ python3 scripts/put_event.py \
   --bus-name "$BUS_NAME" \
   --force-failure
 
-# Wait ~30 seconds for Lambda retries to exhaust, then inspect the queue
+# Wait 2-3 minutes for Lambda retries to exhaust, then inspect the queue
+# (Lambda retries 2x with exponential backoff before on-failure destination)
+sleep 180
 python3 scripts/peek_queue.py --queue-url "$QUEUE_URL"
 ```
 
@@ -124,6 +126,11 @@ python3 scripts/put_event.py \
 # Peek at failed messages (don't delete)
 python3 scripts/peek_queue.py \
   --queue-url https://sqs.us-east-1.amazonaws.com/123456789012/...
+
+# Wait longer for messages (useful after forced failures with retries)
+python3 scripts/peek_queue.py \
+  --queue-url https://... \
+  --wait-seconds 20
 
 # Delete messages after reading (use with caution)
 python3 scripts/peek_queue.py \
@@ -204,11 +211,14 @@ Ensure EventBridge has `lambda:InvokeFunction` permission.
 ### No messages in SQS after forced failure
 
 **EventBridge retry exhaustion + Lambda on-failure destination**:
-- EventBridge retries 2 times (configured in `infra/eventbridge.tf`)
-- Lambda retries 2 times (configured in `infra/lambda.tf`)
-- Total delay before SQS delivery: ~1-2 minutes
+- Lambda retries 2 times with exponential backoff (configured in `infra/lambda.tf`)
+- On-failure destination sends to SQS asynchronously
+- Total delay before SQS delivery: ~2-3 minutes
 
-Wait at least 2 minutes after forcing failure, then check the queue.
+Wait at least 3 minutes after forcing failure, then check the queue with:
+```bash
+python3 scripts/peek_queue.py --queue-url <queue-url> --wait-seconds 20
+```
 
 **Check Lambda CloudWatch Logs** for errors:
 ```bash
