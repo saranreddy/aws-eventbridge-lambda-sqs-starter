@@ -28,20 +28,9 @@ This starter is for backend and platform engineers building async, event-driven 
 
 ## Architecture
 
-```mermaid
-graph LR
-    A[Event Source] -->|PutEvents| B[EventBridge Bus]
-    B -->|Rule Match| C[Lambda Processor]
-    C -->|Success| D[CloudWatch Logs]
-    C -->|Failure/Retry Exhausted| E[SQS Queue]
-    E -->|Max Receives Exceeded| F[DLQ]
-    C -->|Logs| D
-    
-    style B fill:#ff9900
-    style C fill:#ff9900
-    style E fill:#ff9900
-    style F fill:#e00
-```
+![AWS EventBridge + Lambda + SQS architecture diagram showing event flow from engineer through EventBridge bus, Lambda processor, and failure queues, all deployed via Terraform](docs/architecture.png)
+
+*The diagram is generated from [`docs/architecture.py`](docs/architecture.py) (requires `pip install diagrams` and Graphviz; running `python docs/architecture.py` writes `architecture.png` next to the script).*
 
 **Components:**
 - **Custom EventBridge bus**: Isolated demo bus for `demo.exports` source events
